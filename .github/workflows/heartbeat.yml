@@ -1,0 +1,152 @@
+name: Heartbeat Check
+
+# auto-news-delivery のプレモータム対応（2026-09-03、A1/C4）。
+#
+# 背景: このリポジトリへの commit は、ローカルMac上で無人実行される run.sh
+# （kindle・apple-news の収集結果を feed.xml に統合し、変更があればpushする）
+# からのみ発生する。run.sh 自体が動かなくなった場合（LaunchAgentの登録が
+# 外れる、macOS再起動後にログインされないまま放置される、Keychainアクセスが
+# ハングする等）、失敗通知の仕組み（notify_failure）もrun.sh内部からしか
+# 呼ばれないため、通知経路自体が沈黙してしまう「死活監視の不在」が
+# 最大のリスクだった（詳細はプレモータムの議論を参照）。
+#
+# このワークフローは、それとは完全に独立した外形監視として、GitHub Actions側
+# （配信専用Gmailアカウントに一切依存しない）から「直近一定時間以内にこの
+# リポジトリへのcommitがあったか」だけを確認する。無ければGitHub Issueを
+# 作成し、GitHub標準のメール通知でリポジトリオーナー宛に知らせる。
+#
+# 閾値（STALE_THRESHOLD_HOURS）の考え方:
+#   run.shの実行頻度はフェーズ⑥（pmset/LaunchAgent本登録）で決まる想定だが、
+#   この仕組みの性質上「概ね1日1回」の実行が基本になる見込み。その前提で、
+#   以下の「正常なのにcommitが無い日」が複数日続いても誤報しないよう、
+#   余裕を持たせて既定値を96時間（4日）としている:
+#     - 電源未接続によるrun.shの安全スキップ（バッテリー駆動、複数日の
+#       出張・旅行等でAC接続の機会が無い場合は連続しうる）
+#     - kindle・apple-news の両方で「新規・更新エントリが0件」の日
+#       （publish_rss.py はfeed.xmlに差分が無ければcommit自体をスキップする
+#       ため、収集自体は成功していてもcommitが発生しない）
+#     - 一時的なネットワーク障害
+#   本番運用でのrun.shの実行頻度が確定したら、この値を見直すこと。
+#
+# アラート疲れ対策: 閾値超過時、既に未解決（open）のheartbeat-alert Issueが
+# あれば新規作成・追記のいずれも行わない（同じ問題を指す通知は1件に留める）。
+# commitが再開したら、開いていたIssueを自動でクローズする。
+
+on:
+  schedule:
+    # 15:00 UTC = 00:00 JST（毎日）。run.shの実行時間帯とは意図的にずらしている。
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      simulate_stale:
+        description: "true にすると、閾値超過（異常系）とみなして分岐をテストする（実際のcommit日時やIssueの状態には影響しない判定のシミュレーションのみ）"
+        required: false
+        default: "false"
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  STALE_THRESHOLD_HOURS: 96
+  HEARTBEAT_LABEL: heartbeat-alert
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Determine staleness
+        id: staleness
+        env:
+          SIMULATE_STALE: ${{ inputs.simulate_stale }}
+        run: |
+          set -euo pipefail
+          last_commit_epoch="$(git log -1 --format=%ct)"
+          last_commit_iso="$(git log -1 --format=%cI)"
+          now_epoch="$(date +%s)"
+          diff_hours=$(( (now_epoch - last_commit_epoch) / 3600 ))
+
+          echo "last_commit_iso=$last_commit_iso" >> "$GITHUB_OUTPUT"
+          echo "diff_hours=$diff_hours" >> "$GITHUB_OUTPUT"
+
+          if [ "$SIMULATE_STALE" = "true" ]; then
+            echo "is_stale=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::workflow_dispatchのsimulate_stale=trueによるシミュレーションです。実際のdiff_hoursは${diff_hours}時間（閾値${STALE_THRESHOLD_HOURS}時間）ですが、異常系として扱います。"
+          elif [ "$diff_hours" -ge "$STALE_THRESHOLD_HOURS" ]; then
+            echo "is_stale=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_stale=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "last_commit=$last_commit_iso (${diff_hours}時間前) / 閾値=${STALE_THRESHOLD_HOURS}時間"
+
+      - name: Create or close heartbeat issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const isStale = '${{ steps.staleness.outputs.is_stale }}' === 'true';
+            const diffHours = '${{ steps.staleness.outputs.diff_hours }}';
+            const lastCommitIso = '${{ steps.staleness.outputs.last_commit_iso }}';
+            const thresholdHours = process.env.STALE_THRESHOLD_HOURS;
+            const label = process.env.HEARTBEAT_LABEL;
+            const { owner, repo } = context.repo;
+
+            const openIssues = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', labels: label,
+            });
+
+            if (isStale) {
+              if (openIssues.data.length > 0) {
+                console.log(`既に未解決のheartbeat-alert Issueが${openIssues.data.length}件あるため、新規作成はスキップします（アラート疲れ防止）: ${openIssues.data.map(i => '#' + i.number).join(', ')}`);
+                return;
+              }
+              const body = [
+                `**auto-news-delivery: リポジトリへのcommitが${diffHours}時間止まっています（閾値: ${thresholdHours}時間）。**`,
+                '',
+                `最終commit: ${lastCommitIso}`,
+                '',
+                'これは、ローカルMac上で無人実行されるrun.sh（kindle・apple-newsの収集結果をこのリポジトリにpushする）が、',
+                '何らかの理由で動いていない可能性を示しています。このIssueは、run.sh自体が起動できない場合には',
+                'run.sh内部の失敗通知（配信専用Gmail経由）も機能しないため、それとは独立した経路として',
+                'GitHub Actionsから作成しています。',
+                '',
+                '**考えられる原因の例:**',
+                '- LaunchAgentの登録が外れている、またはmacOS再起動後にログインされないまま放置されている',
+                '- Macがシャットダウンされている、またはバッテリー駆動が続いている（この場合はrun.shが安全にスキップし続けている可能性がある）',
+                '- Keychainアクセスがハングしている（この場合はrun.sh側のタイムアウト機構で検知・通知されるはずだが、念のため）',
+                '- （正常なケース）kindle・apple-newsともに新規エントリが無い日が続いている、または閾値の見積もりが実際の運用頻度に対して短すぎる',
+                '',
+                '**対応手順:** auto-news-delivery リポジトリ（ローカル）の `CLAUDE.md` 内「緊急停止手順」および',
+                '「フィードバックループの回し方」の節、直近の `logs/run-YYYY-MM-DD.log` を確認してください。',
+                '',
+                'commitが再開すると、このIssueは次回のHeartbeat Check実行時に自動でクローズされます。',
+              ].join('\n');
+
+              const issue = await github.rest.issues.create({
+                owner, repo,
+                title: '[auto-news-delivery] 実行が止まっている可能性があります（heartbeat）',
+                body,
+                labels: [label],
+              });
+              console.log(`Issueを作成しました: #${issue.data.number}`);
+            } else {
+              for (const issue of openIssues.data) {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: issue.number,
+                  body: `commitが再開しました（最終commit: ${lastCommitIso}、${diffHours}時間前）。自動でクローズします。`,
+                });
+                await github.rest.issues.update({
+                  owner, repo, issue_number: issue.number, state: 'closed',
+                });
+                console.log(`Issue #${issue.number} をクローズしました`);
+              }
+              if (openIssues.data.length === 0) {
+                console.log('正常です（未解決のheartbeat-alert Issueは無し）。');
+              }
+            }
