@@ -3,8 +3,9 @@ name: Heartbeat Check
 # auto-news-delivery のプレモータム対応（2026-09-03、A1/C4）。
 #
 # 背景: このリポジトリへの commit は、ローカルMac上で無人実行される run.sh
-# （kindle・apple-news の収集結果を feed.xml に統合し、変更があればpushする）
-# からのみ発生する。run.sh 自体が動かなくなった場合（LaunchAgentの登録が
+# （kindle・apple-news の収集結果を、トピックごとのフィード kindle-feed.xml・
+# apple-news-feed.xml [2026-09-06、単一feed.xmlから分割] に統合し、変更が
+# あればpushする）からのみ発生する。run.sh 自体が動かなくなった場合（LaunchAgentの登録が
 # 外れる、macOS再起動後にログインされないまま放置される、Keychainアクセスが
 # ハングする等）、失敗通知の仕組み（notify_failure）もrun.sh内部からしか
 # 呼ばれないため、通知経路自体が沈黙してしまう「死活監視の不在」が
@@ -23,8 +24,8 @@ name: Heartbeat Check
 #     - 電源未接続によるrun.shの安全スキップ（バッテリー駆動、複数日の
 #       出張・旅行等でAC接続の機会が無い場合は連続しうる）
 #     - kindle・apple-news の両方で「新規・更新エントリが0件」の日
-#       （publish_rss.py はfeed.xmlに差分が無ければcommit自体をスキップする
-#       ため、収集自体は成功していてもcommitが発生しない）
+#       （publish_rss.py は各トピックのフィードに差分が無ければcommit自体を
+#       スキップするため、収集自体は成功していてもcommitが発生しない）
 #     - 一時的なネットワーク障害
 #   本番運用でのrun.shの実行頻度が確定したら、この値を見直すこと。
 #

@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
-<title>auto-news-delivery 公開フィード</title>
+<title>auto-news-delivery 公開フィード（更新終了）</title>
 <link>https://auto-delivery-831.github.io/personal-rss-feeds/</link>
-<description>Kindleセール・Appleデバイス情報の自動収集フィード</description>
+<description>【2026-09-06をもって更新終了】Kindleセール・Appleデバイス情報の自動収集フィード（統合版）。後継フィード: kindle-feed.xml / apple-news-feed.xml</description>
 <language>ja</language>
+<item>
+<title>【お知らせ】このフィードの更新は終了しました</title>
+<link>https://auto-delivery-831.github.io/personal-rss-feeds/</link>
+<guid isPermaLink="false">notice:feed-retired:2026-09-06</guid>
+<pubDate>Sun, 06 Sep 2026 07:36:08 +0900</pubDate>
+<description><![CDATA[<p>このフィード（kindle・apple-newsの統合版 feed.xml）は2026-09-06をもって更新を終了しました。今後の更新はありません。</p><p>今後はトピックごとに分離された以下の新フィードをご利用ください（過去の配信済みエントリは新フィードには引き継いでいません。新フィードは本日以降の新着分のみを掲載します）。</p><p>Kindleセール情報: <a href="https://auto-delivery-831.github.io/personal-rss-feeds/auto-news-delivery/kindle-feed.xml">kindle-feed.xml</a></p><p>Appleニュース情報: <a href="https://auto-delivery-831.github.io/personal-rss-feeds/auto-news-delivery/apple-news-feed.xml">apple-news-feed.xml</a></p>]]></description>
+</item>
 <item>
 <title>Kindleセール情報 - 2026年9月6日</title>
 <link>https://auto-delivery-831.github.io/personal-rss-feeds/</link>
