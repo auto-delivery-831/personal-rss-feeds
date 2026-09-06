@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+<channel>
+<title>auto-news-delivery Appleニュース情報</title>
+<link>https://auto-delivery-831.github.io/personal-rss-feeds/</link>
+<description>Appleデバイスの新製品・新機能・OSアップデート・価格変更等の自動収集フィード</description>
+<language>ja</language>
+<item>
+<title>Appleニュース情報 - 2026年9月6日</title>
+<link>https://auto-delivery-831.github.io/personal-rss-feeds/</link>
+<guid isPermaLink="false">digest:apple-news:2026-09-06</guid>
+<pubDate>Sun, 06 Sep 2026 09:01:58 +0900</pubDate>
+<description><![CDATA[<div style="background-color:#ffffff; color:#1d1d1f; font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;">
+<div style="margin:0; padding:0 0 24px 0;">
+<p style="margin:0 0 8px 0; font-size:17px; line-height:1.5; font-weight:700; color:#1d1d1f;"><a href="https://9to5mac.com/2026/09/05/indie-app-spotlight-keyalarm-calendar-events-into-alarms/" style="color:#1d1d1f; text-decoration:none;">インディアプリ紹介：『KeyAlarm』があなたの重要なカレンダーイベントをアラームに変える</a></p>
+<p style="margin:0 0 10px 0; font-size:14px; line-height:1.8; color:#1d1d1f;">KeyAlarmはカレンダーイベントの通知機能を強化するインディアプリで、最重要な予定を見落とさないようにするツールである。通常のカレンダー通知は音や振動で知らせるだけのため、スマートフォンが集中モードに設定されていたり、ユーザーが画面を見ていないときには気付かれないことが多い。</p><p style="margin:0 0 10px 0; font-size:14px; line-height:1.8; color:#1d1d1f;">このアプリは、ユーザーが事前に指定した重要なカレンダーイベントをアラーム形式に変換する。アラームはより強い警告を発するため、通常の通知よりも確実にユーザーの注意を引く。結果として、仕事の締め切りや重要な会議など、絶対に忘れてはいけないスケジュールを確実に認識できるようになる。</p>
+<p style="margin:6px 0 0 0; font-size:12px; color:#86868b;">（claude -p による日本語要約。原文は英語です）</p>
+<p style="margin:4px 0 0 0; font-size:13px; line-height:1.6; color:#86868b;">情報源: 9to5Mac</p>
+<p style="margin:10px 0 0 0;"><a href="https://9to5mac.com/2026/09/05/indie-app-spotlight-keyalarm-calendar-events-into-alarms/" style="font-size:13px; color:#1d1d1f; text-decoration:none;">詳細を見る →</a></p>
+</div>
+</div>]]></description>
+<category>apple-news</category>
+</item>
+</channel>
+</rss>
