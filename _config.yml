@@ -1,0 +1,9 @@
+# GitHub Pages（Jekyll）向けの明示設定。
+#
+# digest/配下（Feedly「View website」用の日次ダイジェストページ、
+# auto-news-delivery側のscripts/lib/publish_rss.pyが生成）は、front matterを
+# 持たない静的HTMLとして書き出しているため、Jekyllのデフォルト動作でもそのまま
+# 未加工でコピーされ、本来この設定は無くても動作する。将来テーマ導入等でデフォルトの
+# 除外ルールが変わった場合に備え、念のため明示的にincludeしておく（2026-09-08追加）。
+include:
+  - digest
